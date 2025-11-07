@@ -4,7 +4,7 @@ from tensorflow.keras import models
 from cnn_mnist.data_processing import load_and_preprocess_data
 from cnn_mnist.model import build_cnn_model
 from cnn_mnist.training import train_and_save_model, plot_training_history
-from cnn_mnist.evaluation import print_classification_report_func
+from cnn_mnist.evaluation import print_classification_report_func, plot_roc_curves, plot_confusion_matrix
 
 
 # Main program flow
@@ -41,6 +41,10 @@ if __name__ == "__main__":
     # Evaluate model
     test_loss, test_acc = trained_model.evaluate(test_images, test_labels, verbose=0)
     print(f'Test accuracy: {test_acc}')
+    
+    # Plot evaluation graphs
+    plot_roc_curves(trained_model, test_images, test_labels)
+    plot_confusion_matrix(trained_model, test_images, test_labels)
     
     # Demonstrate loading model and predicting
     sample_image = test_images[:1]  # Take one example for prediction
