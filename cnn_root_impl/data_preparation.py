@@ -1,21 +1,17 @@
-# -------------------------------
-# Step 1.1: Loading MNIST DataSet
-# -------------------------------
+# ==============================================
+# Step 1.1: Loading MNIST Dataset
+# ==============================================
 import numpy as np
 import matplotlib.pyplot as plt
-
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
-
+# noinspection PyUnresolvedReferences
 from tensorflow.keras.datasets import mnist
+# noinspection PyUnresolvedReferences
 from tensorflow.keras.utils import to_categorical
+# noinspection PyUnresolvedReferences
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import cv2
 
-from tqdm import tqdm
-from sklearn.metrics import roc_curve, auc
-from sklearn.preprocessing import label_binarize
 
 def loading_MNIST_Dataset(train_size=16, val_size=16, test_size=10):
     """
@@ -36,7 +32,7 @@ def loading_MNIST_Dataset(train_size=16, val_size=16, test_size=10):
         x_train, y_train, train_size=train_size, test_size=val_size, random_state=42
     )
 
-    # Subset of dataset for testing
+    # Use only a subset of the test dataset
     x_test, y_test = x_test[:test_size], y_test[:test_size]
     print(f"\n\nData loading completed: ")
     print("-" * 50)
@@ -44,7 +40,8 @@ def loading_MNIST_Dataset(train_size=16, val_size=16, test_size=10):
     print(f"x_val shape: {x_val.shape}, y_val shape: {y_val.shape}")
     print(f"x_test shape: {x_test.shape}, y_test shape: {y_test.shape}")
     print("-" * 50)
-    return (x_train, y_train, x_val, y_val, x_test, y_test)
+    return x_train, y_train, x_val, y_val, x_test, y_test
+
 
 def show_image(x_train, y_train):
     """
@@ -54,12 +51,12 @@ def show_image(x_train, y_train):
         x_train (np.array): Training images
         y_train (np.array): Training labels
     """
-    print(f"\n\nShow image: ")
+    print(f"\n\nShowing sample images: ")
     print("-" * 50)
-    # visualization of top 5 number images
-    plt.figure(figsize=(10,4))
+    # Visualization of first 5 images from the training set
+    plt.figure(figsize=(10, 4))
     for i in range(5):
-        plt.subplot(1,5,i+1)
+        plt.subplot(1, 5, i + 1)
         plt.imshow(x_train[i], cmap='gray')
         plt.title(f"Label: {y_train[i]}")
         plt.axis('off')
@@ -67,70 +64,80 @@ def show_image(x_train, y_train):
     plt.show()
     print("-" * 50)
 
-# -------------------------------
+
+# ==============================================
 # Step 1.2: Image Preprocessing
-# -------------------------------
+# ==============================================
 def _image_preprocess_single(img):
     """
-    Image preprocessing:
-    - uint8 transformation: for Binary Morphological Operations (opening / closing etc.)
-    - Opening: Removes exterior noise
-    - Closing: Fills interior gaps
-    - Normalisation: scaling to [0,1]
+    Preprocess a single image using morphological operations
+    
+    Steps:
+    1. Convert to uint8 format for OpenCV morphological operations
+    2. Apply opening operation to remove exterior noise
+    3. Apply closing operation to fill interior gaps
+    4. Normalize pixel values to [0,1] range
+    
+    Parameters:
+        img (np.array): Input image
+        
+    Returns:
+        np.array: Preprocessed image
     """
-    # ensure uint8 format(1 graylevel channel) for the binary morphological operations (opening and closing) in OpenCV
+    # Ensure uint8 format (1 gray level channel) for OpenCV morphological operations
     if img.dtype != np.uint8:
-        img_uint8 = (img * 255).astype(np.uint8)  # rescaling to [0, 255] if the original scale is [0,1] float
+        img_uint8 = (img * 255).astype(np.uint8)  # Rescale to [0, 255] if original scale is [0,1] float
     else:
-        img_uint8 = img.copy().astype(np.uint8)   # directly copy for operations if it already is [0, 255]
+        img_uint8 = img.copy().astype(np.uint8)  # Copy directly if already in [0, 255] range
 
-    # structuring element (kernel) size is (2x2)
-    # -> small kernel only impact small noises, avoiding destroy the main structure of the original image
-    kernel = np.ones((2,2), np.uint8)
+    # Define structuring element (kernel) of size 2x2
+    # Small kernel affects only small noises while preserving the main structure
+    kernel = np.ones((2, 2), np.uint8)
 
-    # Opening operation (erosion first dilation then): eliminate small exterior noises
+    # Opening operation (erosion followed by dilation): removes small exterior noises
     img_open = cv2.morphologyEx(img_uint8, cv2.MORPH_OPEN, kernel)
 
-    # Closing operation (dilation->erosion): fills small interior holds, connects nearby objects and smooths boundaries
+    # Closing operation (dilation followed by erosion): fills small interior holes and smooths boundaries
     img_close = cv2.morphologyEx(img_open, cv2.MORPH_CLOSE, kernel)
 
-    # convert from unit8 to float32 and normalize to [0,1]
-    # Why: to enable more stable convergence when training NN
-    # What if [0,255]: numbers of weighted sum probably out of the boundaries of limitation in computation
+    # Convert from uint8 to float32 and normalize to [0,1] range
+    # Normalization helps achieve more stable convergence during neural network training
+    # Values in [0,255] range may cause computational overflow in weighted sums
     img_normalized = img_close.astype('float32') / 255.0
 
     return img_normalized
 
+
 def image_preprocess(dataset):
     """
-    Apply image preprocessing to entire dataset
+    Apply image preprocessing to the entire dataset
     
     Parameters:
         dataset (tuple): Dataset tuple (x_train, y_train, x_val, y_val, x_test, y_test)
         
     Returns:
-        tuple: Preprocessed dataset
+        tuple: Preprocessed dataset with images reshaped to 4D tensors
     """
     print(f"\n\nImage preprocessing: ")
     print("-" * 50)
     (x_train, y_train, x_val, y_val, x_test, y_test) = dataset
 
-    # Batch dimension assign to -1 for automatically inference of the number of N (number of batch size).
-    # Final shape: (batch_size, height, width, channels) = (N, 28, 28, 1).
-    # This ensures the data is in the proper 4D format required by following CNNs (NHWC).
-    x_train = np.array([_image_preprocess_single(img) for img in x_train]).reshape(-1,28,28,1)
+    # Process each dataset split and reshape to 4D tensor format (N, 28, 28, 1)
+    # This ensures the data is in the proper format required by CNNs (NHWC format)
+    x_train = np.array([_image_preprocess_single(img) for img in x_train]).reshape(-1, 28, 28, 1)
     print(f"-- x_train preprocessing completed: {len(x_train)} images with shape: {x_train.shape}")
-    x_val = np.array([_image_preprocess_single(img) for img in x_val]).reshape(-1,28,28,1)
+    x_val = np.array([_image_preprocess_single(img) for img in x_val]).reshape(-1, 28, 28, 1)
     print(f"-- x_val preprocessing completed: {len(x_val)} images with shape: {x_val.shape}")
-    x_test = np.array([_image_preprocess_single(img) for img in x_test]).reshape(-1,28,28,1)
+    x_test = np.array([_image_preprocess_single(img) for img in x_test]).reshape(-1, 28, 28, 1)
     print(f"-- x_test preprocessing completed: {len(x_test)} images with shape: {x_test.shape}")
     print("-" * 50)
 
-    return (x_train, y_train, x_val, y_val, x_test, y_test)
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
-# -------------------------------
-# Step 1.3: One-hot encode labels
-# -------------------------------
+
+# ==============================================
+# Step 1.3: One-hot Encoding of Labels
+# ==============================================
 def apply_one_hot(dataset):
     """
     Apply one-hot encoding to dataset labels
@@ -143,7 +150,7 @@ def apply_one_hot(dataset):
     """
     (x_train, y_train, x_val, y_val, x_test, y_test) = dataset
 
-    # Label one-hot encoding
+    # Apply one-hot encoding to all dataset splits
     y_train = to_categorical(y_train, 10)
     y_val = to_categorical(y_val, 10)
     y_test = to_categorical(y_test, 10)
@@ -155,11 +162,12 @@ def apply_one_hot(dataset):
     print(f"y_test encoded shape: {y_test.shape}")
     print("-" * 50)
 
-    return (x_train, y_train, x_val, y_val, x_test, y_test)
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
-# -------------------------------
+
+# ==============================================
 # Step 1.4: Data Augmentation
-# -------------------------------
+# ==============================================
 def augment_img(dataset):
     """
     Set up data augmentation for the training dataset
@@ -172,27 +180,27 @@ def augment_img(dataset):
     """
     (x_train, y_train, x_val, y_val, x_test, y_test) = dataset
 
-    # There are a large number of handwritten digit styles in the MNIST dataset.
-    # Data augmentation helps improve robustness during training.
+    # MNIST contains various handwritten digit styles.
+    # Data augmentation improves model robustness during training.
 
-    # The parameters below are relatively mild (10% shift, 10 degree rotation),
-    # which avoids distorting the digits too much.
-    # If the parameters are too large (e.g., rotation_range=45),
-    # digits like '6' might look like '9', which would be counterproductive.
+    # Using relatively mild augmentation parameters (10% shift, 10 degree rotation)
+    # to avoid excessive distortion that might change digit semantics.
+    # For example, with extreme parameters, digit '6' might be mistaken for '9'.
     datagen = ImageDataGenerator(
-        rotation_range=10,      # +/- 10 degree rotation
+        rotation_range=10,  # +/- 10 degree rotation
         width_shift_range=0.1,  # +/- 10% horizontal shift
-        height_shift_range=0.1, # +/- 10% vertical shift
-        zoom_range=0.1          # 10% zoom in/out
+        height_shift_range=0.1,  # +/- 10% vertical shift
+        zoom_range=0.1  # 10% zoom in/out
     )
     datagen.fit(x_train)
     print(f"\n\nImage Augmentation on x_train completed.")
     print("-" * 50)
-    return (x_train, y_train, x_val, y_val, x_test, y_test, datagen)
+    return x_train, y_train, x_val, y_val, x_test, y_test, datagen
 
-# -------------------------------
-# Step 1.5: Encapsulate data loading and preprocessing
-# -------------------------------
+
+# ==============================================
+# Step 1.5: Data Loading and Preprocessing Pipeline
+# ==============================================
 def print_step_head(head_name, _index=-1):
     """
     Print formatted section header
@@ -206,11 +214,10 @@ def print_step_head(head_name, _index=-1):
     print(f"{(str(_index) + '. ') if _index > -1 else ''}{head_name}")
     print("=" * 50)
 
+
 def load_and_prepare_data(train_size=16, val_size=8, test_size=10,
-                 show_demo=False,
-                 preprocess=True,
-                 one_hot=True,
-                 augument=True):
+                          show_demo=True, preprocess=True,
+                          one_hot=True, augument=True):
     """
     Main function to load and prepare MNIST data
     
@@ -229,14 +236,14 @@ def load_and_prepare_data(train_size=16, val_size=8, test_size=10,
 
     print_step_head("load_and_prepare_data", _index=1)
     dataset_original = loading_MNIST_Dataset(train_size, val_size, test_size)
-    if show_demo: 
+    if show_demo:
         show_image(dataset_original[0], dataset_original[1])
-    if preprocess: 
+    if preprocess:
         dataset = image_preprocess(dataset_original)
     else:
         dataset = dataset_original
-    if one_hot: 
+    if one_hot:
         dataset = apply_one_hot(dataset)
-    if augument: 
+    if augument:
         dataset = augment_img(dataset)
     return dataset
