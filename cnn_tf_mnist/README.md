@@ -23,8 +23,8 @@ python demo.py
 Each module can be imported and used independently:
 
 ```python
-from cnn_mnist.data_processing import load_and_preprocess_data
-from cnn_mnist.model import build_cnn_model
-from cnn_mnist.training import train_and_save_model
-from cnn_mnist.evaluation import load_model_and_predict, print_classification_report_func
+from cnn_tf_mnist.data_processing import load_and_preprocess_data
+from cnn_tf_mnist.model import build_cnn_model
+from cnn_tf_mnist.training import train_and_save_model
+from cnn_tf_mnist.evaluation import load_model_and_predict, print_classification_report_func
 ```

@@ -1,10 +1,10 @@
 import os
 import matplotlib.pyplot as plt
 from tensorflow.keras import models
-from cnn_mnist.data_processing import load_and_preprocess_data
-from cnn_mnist.model import build_cnn_model
-from cnn_mnist.training import train_and_save_model, plot_training_history
-from cnn_mnist.evaluation import print_classification_report_func, plot_roc_curves, plot_confusion_matrix
+from cnn_tf_mnist.data_processing import load_and_preprocess_data
+from cnn_tf_mnist.model import build_cnn_model
+from cnn_tf_mnist.training import train_and_save_model, plot_training_history
+from cnn_tf_mnist.evaluation import print_classification_report_func, plot_roc_curves, plot_confusion_matrix
 
 
 # Main program flow
