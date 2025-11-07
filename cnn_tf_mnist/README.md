@@ -18,6 +18,8 @@ To run the complete CNN training and evaluation workflow:
 python demo.py
 ```
 
+All output files (model and evaluation plots) will be saved in the `results` directory.
+
 ## Modules
 
 Each module can be imported and used independently:

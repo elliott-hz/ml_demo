@@ -24,6 +24,11 @@ def train_and_save_model(model, train_data, test_data, model_path='mnist_cnn_mod
     history = model.fit(train_images, train_labels, epochs=5, batch_size=64, 
                         validation_data=(test_images, test_labels))
     
+    # Create directory if it doesn't exist
+    model_dir = os.path.dirname(model_path)
+    if model_dir:
+        os.makedirs(model_dir, exist_ok=True)
+    
     # Save model to local file
     model.save(model_path)
     print(f"Model saved to {model_path}")
@@ -45,6 +50,12 @@ def plot_training_history(history, save_to_file=False, filename='training_curves
         print("Plotting disabled: No display environment detected. "
               "To save plots to files, call this function with save_to_file=True")
         return
+    
+    # Create directory if it doesn't exist
+    if save_to_file:
+        plot_dir = os.path.dirname(filename)
+        if plot_dir:
+            os.makedirs(plot_dir, exist_ok=True)
     
     # Plot training & validation accuracy values
     plt.figure(figsize=(12, 4))

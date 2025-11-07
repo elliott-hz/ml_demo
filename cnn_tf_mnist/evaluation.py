@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras import models
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
 import seaborn as sns
+import os
 
 
 def load_model_and_predict(model_path, test_sample):
@@ -48,7 +49,7 @@ def print_classification_report_func(model, test_images, test_labels):
     print(report)
 
 
-def plot_roc_curves(model, test_images, test_labels):
+def plot_roc_curves(model, test_images, test_labels, save_dir='results'):
     """
     Plot ROC curves for each class
     
@@ -56,6 +57,7 @@ def plot_roc_curves(model, test_images, test_labels):
         model: Trained model
         test_images: Test images
         test_labels: Test labels (one-hot encoded)
+        save_dir (str): Directory to save the plot
     """
     # Get predictions
     test_predictions = model.predict(test_images)
@@ -93,12 +95,17 @@ def plot_roc_curves(model, test_images, test_labels):
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curves for Each Class')
     plt.legend(loc="lower right")
-    plt.savefig('roc_curves.png')
+    
+    # Create directory if it doesn't exist
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+    filename = os.path.join(save_dir, 'roc_curves.png')
+    plt.savefig(filename)
     plt.close()
-    print("ROC curves saved to roc_curves.png")
+    print(f"ROC curves saved to {filename}")
 
 
-def plot_confusion_matrix(model, test_images, test_labels):
+def plot_confusion_matrix(model, test_images, test_labels, save_dir='results'):
     """
     Plot confusion matrix
     
@@ -106,6 +113,7 @@ def plot_confusion_matrix(model, test_images, test_labels):
         model: Trained model
         test_images: Test images
         test_labels: Test labels (one-hot encoded)
+        save_dir (str): Directory to save the plot
     """
     # Get predictions
     test_predictions = model.predict(test_images)
@@ -125,6 +133,11 @@ def plot_confusion_matrix(model, test_images, test_labels):
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
-    plt.savefig('confusion_matrix.png')
+    
+    # Create directory if it doesn't exist
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+    filename = os.path.join(save_dir, 'confusion_matrix.png')
+    plt.savefig(filename)
     plt.close()
-    print("Confusion matrix saved to confusion_matrix.png")
+    print(f"Confusion matrix saved to {filename}")
