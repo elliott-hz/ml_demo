@@ -38,8 +38,12 @@ model = Sequential([
     Softmax()
 ])
 
+# Set input shape for report generation
+input_shape = (x_train.shape[0], 28, 28, 1)
+model.input_shape_for_report = input_shape
+
 # build each layers within the 'model'
-model.build(input_shape=(x_train.shape[0], 28, 28, 1), show_summary=True)  # Input shape must be specified
+model.build(input_shape=input_shape, show_summary=True)  # Input shape must be specified
 
 # 3. Initialize Optimizer
 optimizer = SGD(lr=0.1)
@@ -57,12 +61,20 @@ train_pipeline = CNN_Training(
     val_rate=0.2,  # 20% of training data for validation
     epochs=10,
     batch_size=100,
-    patience=5  # early stop patience
+    patience=5,  # early stop patience
+    report=True,
+    dataset_level='level_1'
 )
-history = train_pipeline.train()
+
+result = train_pipeline.train()
+if isinstance(result, tuple) and len(result) == 2:
+    history, report_gen = result
+else:
+    history = result
+    report_gen = None
 
 # 6. Performing Training
-evaluation = CNN_Evaluation()
+evaluation = CNN_Evaluation(report_gen)
 evaluation.loss_accuracy_curve(history)
 
 # 7. Performing Prediction on Test Dataset
@@ -76,3 +88,8 @@ evaluation.show_classification_report(test_labels, test_preds)
 
 # 10. Evaluation with ROC Curves and AUCs
 evaluation.show_ROC_Curves(test_labels, y_test, test_logits)
+
+# Generate and save report if report generator is available
+if report_gen:
+    report_file = report_gen.generate_html_report()
+    print(f"Training report generated: {report_file}")

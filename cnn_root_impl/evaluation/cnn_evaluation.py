@@ -7,8 +7,8 @@ from sklearn.preprocessing import label_binarize
 
 class CNN_Evaluation:
 
-    def __init__(self):
-        pass
+    def __init__(self, report_generator=None):
+        self.report_generator = report_generator
 
     # Evaluates the trained model on the test set, producing the model's predictions and comparing them with the true labels.
     def predict_on_test(self, model, x_test, y_test):
@@ -48,6 +48,10 @@ class CNN_Evaluation:
         plt.ylabel("Accuracy")
         plt.legend()
         plt.show()
+        
+        # Add to report if report generator is provided
+        if self.report_generator:
+            self.report_generator.add_loss_accuracy_curve(history)
 
     # =========================
     # Confusion matrix
@@ -61,6 +65,10 @@ class CNN_Evaluation:
         plt.xlabel("Predicted")
         plt.ylabel("True")
         plt.show()
+        
+        # Add to report if report generator is provided
+        if self.report_generator:
+            self.report_generator.add_confusion_matrix(labels, preds)
 
     # =========================
     # Classification report
@@ -87,3 +95,7 @@ class CNN_Evaluation:
         plt.ylabel('True Positive Rate')
         plt.legend()
         plt.show()
+        
+        # Add to report if report generator is provided
+        if self.report_generator:
+            self.report_generator.add_roc_curves(test_labels, y_test, test_logits)

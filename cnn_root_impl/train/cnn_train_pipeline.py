@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+from cnn_root_impl.util.report_generator import ReportGenerator
 
 
 class CNN_Training:
@@ -10,7 +11,7 @@ class CNN_Training:
                  x_test, y_test,
                  val_rate=0.2,
                  epochs=20, batch_size=32,
-                 patience=3):
+                 patience=3, report=False, dataset_level=None):
         # Split training data into train and validation sets
         self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(
             x_train, y_train, test_size=val_rate, random_state=42
@@ -24,6 +25,9 @@ class CNN_Training:
         self.epochs = epochs
         self.batch_size = batch_size
         self.patience = patience
+        self.report = report
+        self.dataset_level = dataset_level
+        self.val_rate = val_rate
 
     def train(self):
         model = self.model
@@ -122,4 +126,21 @@ class CNN_Training:
             "train_acc": train_accs,
             "val_acc": val_accs
         }
+        
+        # Generate report if requested
+        if self.report:
+            report_gen = ReportGenerator()
+            report_gen.add_data_info(
+                x_train.shape, y_train.shape, 
+                self.x_test.shape, self.y_test.shape,
+                self.dataset_level
+            )
+            report_gen.add_model_summary(model)
+            report_gen.add_optimizer_info(optimizer)
+            report_gen.add_criterion_info(criterion)
+            report_gen.add_training_params(val_rate=self.val_rate, 
+                                          epochs=epochs, batch_size=batch_size, patience=patience)
+            
+            return history, report_gen
+            
         return history
