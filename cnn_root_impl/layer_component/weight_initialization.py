@@ -31,7 +31,7 @@ def compute_fan_in_and_fan_out(shape):
     Raises:
         TypeError: If shape length is not 2 or 4
     """
-    # Handle convolutional layer weights: shape = (out_channels, in_channels, kernel_height, kernel_width)
+    # Handle convolutional layer_component weights: shape = (out_channels, in_channels, kernel_height, kernel_width)
     if len(shape) == 4:
         out_channels, in_channels, kernel_height, kernel_width = shape
         # fan_in = number of input channels × kernel receptive field area
@@ -39,7 +39,7 @@ def compute_fan_in_and_fan_out(shape):
         # fan_out = number of output channels × kernel receptive field area
         fan_out = out_channels * kernel_height * kernel_width
 
-    # Handle fully connected layer (dense) weights: shape = (in_features, out_features)
+    # Handle fully connected layer_component (dense) weights: shape = (in_features, out_features)
     elif len(shape) == 2:
         fan_in, fan_out = shape[0], shape[1]
     else:
@@ -210,115 +210,3 @@ def weight_initialization(shape, kernel_initializer='he'):
     else:
         # Normal initialization with small standard deviation - fallback option
         return norm_initialization(shape)
-
-
-# ======================================================
-# Step 2.2: Layer Abstract Base Class
-# ======================================================
-class Layer:
-    """
-    Abstract base class for neural network layers.
-    
-    This class defines the common interface that all neural network layers should implement.
-    It provides the basic structure and essential methods that are common to all layer types.
-    
-    Subclasses must implement these core methods:
-      1. forward() - Forward propagation through the layer
-      2. backward() - Backward propagation (gradient computation)
-    
-    Attributes:
-        built (bool): Flag indicating if the layer parameters have been initialized
-        name (str): Layer name for debugging and identification
-    """
-
-    def __init__(self, name=None):
-        """
-        Initialize the Layer base class.
-        
-        Args:
-            name (str, optional): Name of the layer for debugging purposes
-        """
-        # Flag indicating if the layer parameters have been initialized
-        self.built = False
-        # Layer name, used for debugging and printing summaries
-        self.name = name
-
-    def build(self, input_shape):
-        """
-        Initialize layer parameters (such as weights and biases).
-        
-        This method is called once before the first forward pass to initialize
-        layer parameters based on the input shape. Subclasses should override
-        this method to implement layer-specific initialization logic.
-
-        Args:
-            input_shape (tuple): Shape of input data (batch_size, ...)
-        
-        Returns:
-            tuple: Output data shape
-        """
-        self.built = True
-        # By default, return the input shape (identity transformation)
-        return input_shape
-
-    def forward(self, x, training=False):
-        """
-        Forward propagation: Compute the output of the layer.
-        
-        This method computes the forward pass through the layer, transforming
-        the input data to produce the output. All subclasses must implement this method.
-
-        Args:
-            x (numpy.ndarray): Input data tensor
-            training (bool): Boolean flag indicating whether in training mode.
-                           Used for operations specific to training like dropout.
-        
-        Returns:
-            numpy.ndarray: Output of the layer
-        
-        Raises:
-            NotImplementedError: If subclass does not implement this method
-        """
-        raise NotImplementedError("Subclasses must implement the forward method")
-
-    def backward(self, grad):
-        """
-        Backward propagation: Compute gradients for backpropagation.
-        
-        This method performs backward propagation through the layer, computing:
-          1. Gradients w.r.t. layer parameters (weights and biases) for optimization
-          2. Gradients w.r.t. layer input for backpropagation to previous layer
-        
-        All subclasses must implement this method.
-
-        Args:
-            grad (numpy.ndarray): Gradient of loss function w.r.t the current layer's output
-        
-        Returns:
-            numpy.ndarray: Gradient of loss function w.r.t the current layer's input
-        
-        Note:
-            This method should also store gradients w.r.t the layer's weights and biases
-            as instance attributes for use in the optimization step.
-        
-        Raises:
-            NotImplementedError: If subclass does not implement this method
-        """
-        raise NotImplementedError("Subclasses must implement the backward method")
-
-    def output_shape(self, input_shape):
-        """
-        Calculate the output shape of the layer.
-        
-        This method computes the shape of the output tensor given the input shape.
-        It is useful for building and validating network architectures.
-
-        Args:
-            input_shape (tuple): Shape of input data (batch_size, ...)
-        
-        Returns:
-            tuple: Output data shape (batch_size, ...)
-        """
-        # By default, returns input shape, suitable for layers like ReLU, Softmax 
-        # that don't change the spatial dimensions or number of channels
-        return input_shape

@@ -176,7 +176,7 @@ def augment_img(dataset):
         dataset (tuple): Dataset tuple (x_train, y_train, x_val, y_val, x_test, y_test)
         
     Returns:
-        tuple: Dataset with augmentation generator
+        tuple: Dataset without augmentation generator (same as input)
     """
     (x_train, y_train, x_val, y_val, x_test, y_test) = dataset
 
@@ -195,7 +195,8 @@ def augment_img(dataset):
     datagen.fit(x_train)
     print(f"\n\nImage Augmentation on x_train completed.")
     print("-" * 50)
-    return x_train, y_train, x_val, y_val, x_test, y_test, datagen
+    # Return dataset without datagen as it's not used in subsequent steps
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
 
 # ==============================================
@@ -217,7 +218,7 @@ def print_step_head(head_name, _index=-1):
 
 def load_and_prepare_data(train_size=16, val_size=8, test_size=10,
                           show_demo=True, preprocess=True,
-                          one_hot=True, augument=True):
+                          one_hot=True, augment=True):
     """
     Main function to load and prepare MNIST data
     
@@ -228,10 +229,10 @@ def load_and_prepare_data(train_size=16, val_size=8, test_size=10,
         show_demo (bool): Whether to display sample images
         preprocess (bool): Whether to apply image preprocessing
         one_hot (bool): Whether to apply one-hot encoding
-        augument (bool): Whether to set up data augmentation
+        augment (bool): Whether to set up data augmentation
         
     Returns:
-        tuple: Prepared dataset
+        tuple: Prepared dataset (x_train, y_train, x_val, y_val, x_test, y_test)
     """
 
     print_step_head("load_and_prepare_data", _index=1)
@@ -244,6 +245,6 @@ def load_and_prepare_data(train_size=16, val_size=8, test_size=10,
         dataset = dataset_original
     if one_hot:
         dataset = apply_one_hot(dataset)
-    if augument:
+    if augment:
         dataset = augment_img(dataset)
     return dataset
