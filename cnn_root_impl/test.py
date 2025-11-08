@@ -1,12 +1,92 @@
-#!/usr/bin/env python3
-from data_preparation import load_and_prepare_data
+# ===============================
+# Step 6.1 Performing Training on Train Dataset -- Default Parameters
+# ===============================
+from cnn_root_impl.data_prep.data_preparation import load_and_prepare_data, print_step_head
+from cnn_root_impl.evaluation.cnn_evaluation import CNN_Evaluation
+from cnn_root_impl.layer_component.conv2d import Conv2D
+from cnn_root_impl.layer_component.dense import Dense
+from cnn_root_impl.layer_component.dropout import Dropout
+from cnn_root_impl.layer_component.flatten import Flatten
+from cnn_root_impl.layer_component.maxpool2d import MaxPool2D
+from cnn_root_impl.layer_component.relu import ReLU
+from cnn_root_impl.layer_component.softmax import Softmax
+from cnn_root_impl.loss.cross_entropy import CrossEntropyLoss
+from cnn_root_impl.optimizer.sgd import SGD
+from cnn_root_impl.train.cnn_container import Sequential
+from cnn_root_impl.train.cnn_train_pipeline import CNN_Training
 
-# Test the data preparation pipeline
-dataset = load_and_prepare_data(show_demo=False)
-print(f"Loaded dataset with {len(dataset)} components")
+# 1. Prepare dataset
+(x_train, y_train, x_val, y_val, x_test, y_test) = load_and_prepare_data(train_size=2048, val_size=256, test_size=1000,
+                                                                         show_demo=False, preprocess=True, one_hot=True,
+                                                                         augment=True)
 
-# Extract components
-x_train, y_train, x_val, y_val, x_test, y_test = dataset
-print(f"Training samples: {len(x_train)}")
-print(f"Validation samples: {len(x_val)}")
-print(f"Test samples: {len(x_test)}")
+
+# 2. Define and Build the model
+
+print_step_head(head_name='Model Building', _index=2)
+# stack the layers forming a 'model'
+model = Sequential([
+    Conv2D(out_channels=16, kernel_size=(3,3), padding=0, in_channels=1, name='Conv-1',kernel_initializer='he'),
+    ReLU(),
+    MaxPool2D(pool_size=2, stride=2, name='MaxPool2D-1'),
+
+    Conv2D(out_channels=64, kernel_size=(3,3), padding=0, name='Conv-2', kernel_initializer='he'),
+    ReLU(),
+    MaxPool2D(pool_size=2, stride=2, name='MaxPool2D-2'),
+
+    Flatten(),
+    Dense(out_features=128, name='Dense-1'),
+    ReLU(),
+    Dropout(0.5),
+    Dense(out_features=10, name='Dense-2'),
+    Softmax()
+])
+
+# build each layers within the 'model'
+model.build(input_shape=(512, 28, 28, 1), show_summary=True)  # Input shape must be specified
+
+# 3. Initialize Optimizer
+print_step_head(head_name='Optimizer(SGD) Initializing', _index=3)
+optimizer = SGD(lr=0.1)
+
+# 4. Initialize Loss function (criterion)
+print_step_head(head_name='Loss Function(Cross-Entroy Loss Function) Initializing', _index=4)
+criterion = CrossEntropyLoss()
+
+# 5. Performing Training
+print_step_head(head_name='Perform Training', _index=5)
+
+train_pipeline = CNN_Training()
+history = train_pipeline.train(
+    model=model,
+    optimizer=optimizer,
+    criterion=criterion,
+    x_train=x_train, y_train=y_train,
+    x_val=x_val, y_val=y_val,
+    x_test=x_test, y_test=y_test,
+    epochs=50,
+    batch_size=512,
+    patience=5  # early stop patience
+)
+
+# 6. Performing Training
+print_step_head(head_name='Performing Training', _index=6)
+evaluation = CNN_Evaluation()
+evaluation.loss_accuracy_curve(history)
+
+# 7. Performing Prediction on Test Dataset
+print_step_head(head_name='Performing Prediction on Test Dataset', _index=7)
+
+test_logits, test_preds, test_labels = evaluation.predict_on_test(model, x_test, y_test)
+
+# 8. Evaluation with Confusion Matrix
+print_step_head(head_name='Evaluation with Confusion Matrix', _index=8)
+evaluation.show_confusion_matrix(test_labels, test_preds)
+
+# 9. Evaluation with Classification Report
+print_step_head(head_name='Evaluation with Classification Report', _index=9)
+evaluation.show_classification_report(test_labels, test_preds)
+
+# 10. Evaluation with ROC Curves and AUCs
+print_step_head(head_name='Evaluation with ROC Curves and AUCs', _index=10)
+evaluation.show_ROC_Curves(test_labels, y_test, test_logits)

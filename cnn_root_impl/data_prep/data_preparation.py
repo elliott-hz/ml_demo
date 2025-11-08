@@ -1,16 +1,16 @@
 # ==============================================
 # Step 1.1: Loading MNIST Dataset
 # ==============================================
-import numpy as np
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import train_test_split
 # noinspection PyUnresolvedReferences
 from tensorflow.keras.datasets import mnist
 # noinspection PyUnresolvedReferences
-from tensorflow.keras.utils import to_categorical
-# noinspection PyUnresolvedReferences
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import cv2
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.utils import to_categorical
 
 
 def loading_MNIST_Dataset(train_size=16, val_size=16, test_size=10):

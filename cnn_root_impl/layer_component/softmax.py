@@ -1,3 +1,5 @@
+import numpy as np
+
 from cnn_root_impl.layer_component.layer import Layer
 
 
