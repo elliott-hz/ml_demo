@@ -1,7 +1,7 @@
 # ===============================
 # Step 6.1 Performing Training on Train Dataset -- Default Parameters
 # ===============================
-from cnn_root_impl.data_prep.data_preparation import load_dataset, print_step_head
+from cnn_root_impl.data_prep.data_preparation import load_dataset
 from cnn_root_impl.evaluation.cnn_evaluation import CNN_Evaluation
 from cnn_root_impl.layer_component.conv2d import Conv2D
 from cnn_root_impl.layer_component.dense import Dense
@@ -16,20 +16,17 @@ from cnn_root_impl.train.cnn_container import Sequential
 from cnn_root_impl.train.cnn_train_pipeline import CNN_Training
 
 # 1. Prepare dataset
-print_step_head(head_name='Dataset Preparation', _index=1)
 # Load dataset with level_1 (1024 training samples)
-x_train, y_train, x_val, y_val, x_test, y_test = load_dataset(level='level_1')
+x_train, y_train, x_test, y_test = load_dataset(level='level_1')
 
 # 2. Define and Build the model
-
-print_step_head(head_name='Model Building', _index=2)
 # stack the layers forming a 'model'
 model = Sequential([
-    Conv2D(out_channels=16, kernel_size=(3,3), padding=0, in_channels=1, name='Conv-1',kernel_initializer='he'),
+    Conv2D(out_channels=16, kernel_size=(3, 3), padding=0, in_channels=1, name='Conv-1', kernel_initializer='he'),
     ReLU(),
     MaxPool2D(pool_size=2, stride=2, name='MaxPool2D-1'),
 
-    Conv2D(out_channels=64, kernel_size=(3,3), padding=0, name='Conv-2', kernel_initializer='he'),
+    Conv2D(out_channels=64, kernel_size=(3, 3), padding=0, name='Conv-2', kernel_initializer='he'),
     ReLU(),
     MaxPool2D(pool_size=2, stride=2, name='MaxPool2D-2'),
 
@@ -45,22 +42,19 @@ model = Sequential([
 model.build(input_shape=(x_train.shape[0], 28, 28, 1), show_summary=True)  # Input shape must be specified
 
 # 3. Initialize Optimizer
-print_step_head(head_name='Optimizer(SGD) Initializing', _index=3)
 optimizer = SGD(lr=0.1)
 
 # 4. Initialize Loss function (criterion)
-print_step_head(head_name='Loss Function(Cross-Entroy Loss Function) Initializing', _index=4)
 criterion = CrossEntropyLoss()
 
 # 5. Performing Training
-print_step_head(head_name='Perform Training', _index=5)
-
 train_pipeline = CNN_Training(
     model=model,
     optimizer=optimizer,
     criterion=criterion,
     x_train=x_train, y_train=y_train,
-    x_val=x_val, y_val=y_val,
+    x_test=x_test, y_test=y_test,
+    val_rate=0.2,  # 20% of training data for validation
     epochs=10,
     batch_size=100,
     patience=5  # early stop patience
@@ -68,23 +62,17 @@ train_pipeline = CNN_Training(
 history = train_pipeline.train()
 
 # 6. Performing Training
-print_step_head(head_name='Performing Training', _index=6)
 evaluation = CNN_Evaluation()
 evaluation.loss_accuracy_curve(history)
 
 # 7. Performing Prediction on Test Dataset
-print_step_head(head_name='Performing Prediction on Test Dataset', _index=7)
-
 test_logits, test_preds, test_labels = evaluation.predict_on_test(model, x_test, y_test)
 
 # 8. Evaluation with Confusion Matrix
-print_step_head(head_name='Evaluation with Confusion Matrix', _index=8)
 evaluation.show_confusion_matrix(test_labels, test_preds)
 
 # 9. Evaluation with Classification Report
-print_step_head(head_name='Evaluation with Classification Report', _index=9)
 evaluation.show_classification_report(test_labels, test_preds)
 
 # 10. Evaluation with ROC Curves and AUCs
-print_step_head(head_name='Evaluation with ROC Curves and AUCs', _index=10)
 evaluation.show_ROC_Curves(test_labels, y_test, test_logits)

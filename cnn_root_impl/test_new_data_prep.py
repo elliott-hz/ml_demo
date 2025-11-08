@@ -16,18 +16,18 @@ def test_level_loading():
     
     # Test loading level_1 dataset
     print("\n1. Testing level_1 dataset:")
-    prepared_data = load_dataset(level='level_1')
-    print(f"   Prepared data shapes: {[d.shape for d in prepared_data]}")
+    data = load_dataset(level='level_1')
+    print(f"   Loaded data shapes: {[d.shape for d in data]}")
     
     # Test loading with custom size
     print("\n2. Testing custom size dataset (500 training, 100 testing samples):")
-    prepared_data = load_dataset(train_size=500, test_size=100)
-    print(f"   Prepared data shapes: {[d.shape for d in prepared_data]}")
+    data = load_dataset(train_size=500, test_size=100)
+    print(f"   Loaded data shapes: {[d.shape for d in data]}")
     
     # Test loading with augmentation
     print("\n3. Testing level_2 dataset with augmentation:")
-    prepared_data = load_dataset(level='level_2', augment=True)
-    print(f"   Prepared data shapes: {[d.shape for d in prepared_data]}")
+    data = load_dataset(level='level_2', augment=True)
+    print(f"   Loaded data shapes: {[d.shape for d in data]}")
 
 
 if __name__ == "__main__":

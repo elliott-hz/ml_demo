@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
@@ -6,16 +7,20 @@ class CNN_Training:
 
     def __init__(self, model, optimizer, criterion,
                  x_train, y_train,
-                 x_val, y_val,
+                 x_test, y_test,
+                 val_rate=0.2,
                  epochs=20, batch_size=32,
                  patience=3):
+        # Split training data into train and validation sets
+        self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(
+            x_train, y_train, test_size=val_rate, random_state=42
+        )
+
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_val = x_val
-        self.y_val = y_val
+        self.x_test = x_test
+        self.y_test = y_test
         self.epochs = epochs
         self.batch_size = batch_size
         self.patience = patience
