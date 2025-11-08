@@ -3,6 +3,8 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
 import seaborn as sns
 from sklearn.preprocessing import label_binarize
+from io import StringIO
+import sys
 
 
 class CNN_Evaluation:
@@ -47,11 +49,11 @@ class CNN_Evaluation:
         plt.xlabel("Epoch")
         plt.ylabel("Accuracy")
         plt.legend()
-        plt.show()
         
         # Add to report if report generator is provided
         if self.report_generator:
             self.report_generator.add_loss_accuracy_curve(history)
+        # 不再显示图表，因为会阻塞执行
 
     # =========================
     # Confusion matrix
@@ -64,18 +66,23 @@ class CNN_Evaluation:
         plt.title("Confusion Matrix")
         plt.xlabel("Predicted")
         plt.ylabel("True")
-        plt.show()
         
         # Add to report if report generator is provided
         if self.report_generator:
             self.report_generator.add_confusion_matrix(labels, preds)
+        # 不再显示图表，因为会阻塞执行
 
     # =========================
     # Classification report
     # =========================
     def show_classification_report(self, labels, preds):
         print("\nClassification Report:")
-        print(classification_report(labels, preds))
+        report = classification_report(labels, preds)
+        print(report)
+        
+        # Add to report if report generator is provided
+        if self.report_generator:
+            self.report_generator.add_classification_report(report)
 
     # =========================
     # ROC Curve + AUC
@@ -94,8 +101,8 @@ class CNN_Evaluation:
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.legend()
-        plt.show()
         
         # Add to report if report generator is provided
         if self.report_generator:
             self.report_generator.add_roc_curves(test_labels, y_test, test_logits)
+        # 不再显示图表，因为会阻塞执行

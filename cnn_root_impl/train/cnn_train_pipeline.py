@@ -11,7 +11,7 @@ class CNN_Training:
                  x_test, y_test,
                  val_rate=0.2,
                  epochs=20, batch_size=32,
-                 patience=3, report=False, dataset_level=None):
+                 patience=3, report=False):
         # Split training data into train and validation sets
         self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(
             x_train, y_train, test_size=val_rate, random_state=42
@@ -26,7 +26,6 @@ class CNN_Training:
         self.batch_size = batch_size
         self.patience = patience
         self.report = report
-        self.dataset_level = dataset_level
         self.val_rate = val_rate
 
     def train(self):
@@ -132,8 +131,7 @@ class CNN_Training:
             report_gen = ReportGenerator()
             report_gen.add_data_info(
                 x_train.shape, y_train.shape, 
-                self.x_test.shape, self.y_test.shape,
-                self.dataset_level
+                self.x_test.shape, self.y_test.shape
             )
             report_gen.add_model_summary(model)
             report_gen.add_optimizer_info(optimizer)

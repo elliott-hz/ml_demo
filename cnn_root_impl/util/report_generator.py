@@ -1,8 +1,9 @@
-import os
 import base64
-import matplotlib.pyplot as plt
-from io import BytesIO
+import os
 from datetime import datetime
+from io import BytesIO
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -11,7 +12,7 @@ class ReportGenerator:
         self.results_dir = results_dir
         self.report_dir = os.path.join(results_dir, "reports")
         os.makedirs(self.report_dir, exist_ok=True)
-        
+
         self.report_data = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "data_info": {},
@@ -22,20 +23,19 @@ class ReportGenerator:
             "training_history": {},
             "evaluation_results": {}
         }
-        
-    def add_data_info(self, x_train_shape, y_train_shape, x_test_shape, y_test_shape, level=None):
+
+    def add_data_info(self, x_train_shape, y_train_shape, x_test_shape, y_test_shape):
         self.report_data["data_info"] = {
             "train_shape": x_train_shape,
             "train_labels_shape": y_train_shape,
             "test_shape": x_test_shape,
-            "test_labels_shape": y_test_shape,
-            "dataset_level": level
+            "test_labels_shape": y_test_shape
         }
-        
+
     def add_model_summary(self, model):
         layers_info = []
         total_params = 0
-        
+
         # 获取模型的输入形状
         input_shape = getattr(model, 'input_shape_for_report', None)
         if input_shape is None:
@@ -45,12 +45,12 @@ class ReportGenerator:
                 input_shape = 'N/A'
             else:
                 input_shape = 'N/A'
-        
+
         shape = input_shape
-        
+
         for i, layer in enumerate(model.layers):
             input_shape_layer = shape
-            
+
             # 计算当前层的输出形状
             try:
                 if hasattr(layer, 'output_shape') and input_shape_layer != 'N/A':
@@ -66,41 +66,41 @@ class ReportGenerator:
             except Exception as e:
                 # 如果计算输出形状时出错，设为N/A
                 out_shape = 'N/A'
-            
+
             # 计算参数数量
             params_count = 0
             if hasattr(layer, 'params') and layer.params:
                 for p in layer.params:
                     # 使用np.prod来正确计算参数数量，与_summary函数一致
                     params_count += np.prod(p.shape)
-                    
+
             total_params += params_count
-            
+
             layers_info.append({
-                "index": i+1,
+                "index": i + 1,
                 "type": layer.__class__.__name__,
                 "input_shape": str(input_shape_layer),
                 "output_shape": str(out_shape),
                 "params_count": params_count,
                 "name": getattr(layer, 'name', 'N/A')
             })
-            
+
         self.report_data["model_summary"] = {
             "layers": layers_info,
             "total_params": total_params
         }
-        
+
     def add_optimizer_info(self, optimizer):
         self.report_data["optimizer_info"] = {
             "type": optimizer.__class__.__name__,
             "learning_rate": getattr(optimizer, 'lr', 'N/A')
         }
-        
+
     def add_criterion_info(self, criterion):
         self.report_data["criterion_info"] = {
             "type": criterion.__class__.__name__
         }
-        
+
     def add_training_params(self, val_rate, epochs, batch_size, patience):
         self.report_data["training_params"] = {
             "validation_rate": val_rate,
@@ -108,10 +108,10 @@ class ReportGenerator:
             "batch_size": batch_size,
             "patience": patience
         }
-        
+
     def add_training_history(self, history):
         self.report_data["training_history"] = history
-        
+
     def _fig_to_base64(self, fig):
         buf = BytesIO()
         fig.savefig(buf, format='png', bbox_inches='tight')
@@ -119,7 +119,7 @@ class ReportGenerator:
         img_str = base64.b64encode(buf.read()).decode('utf-8')
         plt.close(fig)
         return img_str
-        
+
     def add_loss_accuracy_curve(self, history):
         # Loss Curve
         fig1, ax1 = plt.subplots(figsize=(10, 4))
@@ -129,7 +129,7 @@ class ReportGenerator:
         ax1.set_xlabel("Epoch")
         ax1.set_ylabel("Loss")
         ax1.legend()
-        
+
         # Accuracy Curve
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.plot(history['train_acc'], label="Train Acc")
@@ -138,31 +138,31 @@ class ReportGenerator:
         ax2.set_xlabel("Epoch")
         ax2.set_ylabel("Accuracy")
         ax2.legend()
-        
+
         self.report_data["evaluation_results"]["loss_curve"] = self._fig_to_base64(fig1)
         self.report_data["evaluation_results"]["accuracy_curve"] = self._fig_to_base64(fig2)
-        
+
     def add_confusion_matrix(self, labels, preds):
         from sklearn.metrics import confusion_matrix
         import seaborn as sns
-        
+
         cm = confusion_matrix(labels, preds)
         fig, ax = plt.subplots(figsize=(6, 5))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
         ax.set_title("Confusion Matrix")
         ax.set_xlabel("Predicted")
         ax.set_ylabel("True")
-        
+
         self.report_data["evaluation_results"]["confusion_matrix"] = self._fig_to_base64(fig)
-        
+
     def add_roc_curves(self, test_labels, y_test, test_logits):
         from sklearn.metrics import roc_curve, auc
         from sklearn.preprocessing import label_binarize
         import numpy as np
-        
+
         y_true_bin = label_binarize(test_labels, classes=np.arange(y_test.shape[1]))
         fpr, tpr, roc_auc = {}, {}, {}
-        
+
         fig, ax = plt.subplots(figsize=(6, 5))
         for i in range(y_test.shape[1]):
             fpr[i], tpr[i], _ = roc_curve(y_true_bin[:, i], test_logits[:, i])
@@ -174,24 +174,27 @@ class ReportGenerator:
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
         ax.legend()
-        
+
         self.report_data["evaluation_results"]["roc_curves"] = self._fig_to_base64(fig)
-        
+
+    def add_classification_report(self, report):
+        self.report_data["evaluation_results"]["classification_report"] = report
+
     def generate_html_report(self, filename=None):
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"training_report_{timestamp}.html"
-            
+
         filepath = os.path.join(self.report_dir, filename)
-        
+
         html_content = self._generate_html_content()
-        
+
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
-            
+
         print(f"Report saved to: {filepath}")
         return filepath
-        
+
     def _generate_html_content(self):
         html = f"""
 <!DOCTYPE html>
@@ -262,6 +265,14 @@ class ReportGenerator:
             font-style: italic;
             text-align: right;
         }}
+        pre {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }}
     </style>
 </head>
 <body>
@@ -292,10 +303,6 @@ class ReportGenerator:
                     <td>Test Labels Shape</td>
                     <td>{self.report_data["data_info"].get("test_labels_shape", "N/A")}</td>
                 </tr>
-                <tr>
-                    <td>Dataset Level</td>
-                    <td>{self.report_data["data_info"].get("dataset_level", "Custom")}</td>
-                </tr>
             </table>
         </div>
         
@@ -312,7 +319,7 @@ class ReportGenerator:
                     <th>Name</th>
                 </tr>
         """
-        
+
         for layer in self.report_data["model_summary"].get("layers", []):
             html += f"""
                 <tr>
@@ -324,7 +331,7 @@ class ReportGenerator:
                     <td>{layer["name"]}</td>
                 </tr>
             """
-            
+
         html += f"""
             </table>
         </div>
@@ -377,28 +384,35 @@ class ReportGenerator:
         <div class="info-section">
             <h3>Loss & Accuracy Curves</h3>
         """
-        
+
         if "loss_curve" in self.report_data["evaluation_results"]:
             html += f"""
             <div class="image-container">
                 <img src="data:image/png;base64,{self.report_data["evaluation_results"]["loss_curve"]}" alt="Loss Curve">
             </div>
             """
-            
+
         if "accuracy_curve" in self.report_data["evaluation_results"]:
             html += f"""
             <div class="image-container">
                 <img src="data:image/png;base64,{self.report_data["evaluation_results"]["accuracy_curve"]}" alt="Accuracy Curve">
             </div>
             """
-            
+
         html += """
         </div>
         
         <h2>7. Evaluation Results</h2>
         <div class="info-section">
         """
-        
+
+        # Add classification report if available
+        if "classification_report" in self.report_data["evaluation_results"]:
+            html += f"""
+            <h3>Classification Report</h3>
+            <pre>{self.report_data["evaluation_results"]["classification_report"]}</pre>
+            """
+
         if "confusion_matrix" in self.report_data["evaluation_results"]:
             html += f"""
             <h3>Confusion Matrix</h3>
@@ -406,7 +420,7 @@ class ReportGenerator:
                 <img src="data:image/png;base64,{self.report_data["evaluation_results"]["confusion_matrix"]}" alt="Confusion Matrix">
             </div>
             """
-            
+
         if "roc_curves" in self.report_data["evaluation_results"]:
             html += f"""
             <h3>ROC Curves</h3>
@@ -414,12 +428,12 @@ class ReportGenerator:
                 <img src="data:image/png;base64,{self.report_data["evaluation_results"]["roc_curves"]}" alt="ROC Curves">
             </div>
             """
-            
+
         html += """
         </div>
     </div>
 </body>
 </html>
         """
-        
+
         return html

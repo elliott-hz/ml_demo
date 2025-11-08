@@ -17,7 +17,7 @@ from cnn_root_impl.train.cnn_train_pipeline import CNN_Training
 
 # 1. Prepare dataset
 # Load dataset with level_1 (1024 training samples)
-x_train, y_train, x_test, y_test = load_dataset(level='level_1')
+x_train, y_train, x_test, y_test = load_dataset(level='level_3')
 
 # 2. Define and Build the model
 # stack the layers forming a 'model'
@@ -46,7 +46,7 @@ model.input_shape_for_report = input_shape
 model.build(input_shape=input_shape, show_summary=True)  # Input shape must be specified
 
 # 3. Initialize Optimizer
-optimizer = SGD(lr=0.1)
+optimizer = SGD(lr=0.001)
 
 # 4. Initialize Loss function (criterion)
 criterion = CrossEntropyLoss()
@@ -59,11 +59,10 @@ train_pipeline = CNN_Training(
     x_train=x_train, y_train=y_train,
     x_test=x_test, y_test=y_test,
     val_rate=0.2,  # 20% of training data for validation
-    epochs=10,
+    epochs=20,
     batch_size=100,
     patience=5,  # early stop patience
-    report=True,
-    dataset_level='level_1'
+    report=True
 )
 
 result = train_pipeline.train()
