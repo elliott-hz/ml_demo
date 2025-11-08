@@ -4,15 +4,33 @@ from tqdm import tqdm
 
 class CNN_Training:
 
-    def __init__(self):
-        pass
+    def __init__(self, model, optimizer, criterion,
+                 x_train, y_train,
+                 x_val, y_val,
+                 epochs=20, batch_size=32,
+                 patience=3):
+        self.model = model
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_val = x_val
+        self.y_val = y_val
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.patience = patience
 
-    def train(self, model, optimizer, criterion,
-              x_train, y_train,
-              x_val, y_val,
-              x_test=None, y_test=None,
-              epochs=20, batch_size=32,
-              patience=3):
+    def train(self):
+        model = self.model
+        optimizer = self.optimizer
+        criterion = self.criterion
+        x_train = self.x_train
+        y_train = self.y_train
+        x_val = self.x_val
+        y_val = self.y_val
+        epochs = self.epochs
+        batch_size = self.batch_size
+        patience = self.patience
 
         num_train = x_train.shape[0]
         num_batches = num_train // batch_size

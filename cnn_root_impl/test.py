@@ -1,7 +1,7 @@
 # ===============================
 # Step 6.1 Performing Training on Train Dataset -- Default Parameters
 # ===============================
-from cnn_root_impl.data_prep.data_preparation import load_and_prepare_data, print_step_head
+from cnn_root_impl.data_prep.data_preparation import load_dataset, print_step_head
 from cnn_root_impl.evaluation.cnn_evaluation import CNN_Evaluation
 from cnn_root_impl.layer_component.conv2d import Conv2D
 from cnn_root_impl.layer_component.dense import Dense
@@ -16,10 +16,9 @@ from cnn_root_impl.train.cnn_container import Sequential
 from cnn_root_impl.train.cnn_train_pipeline import CNN_Training
 
 # 1. Prepare dataset
-(x_train, y_train, x_val, y_val, x_test, y_test) = load_and_prepare_data(train_size=2048, val_size=256, test_size=1000,
-                                                                         show_demo=False, preprocess=True, one_hot=True,
-                                                                         augment=True)
-
+print_step_head(head_name='Dataset Preparation', _index=1)
+# Load dataset with level_1 (1024 training samples)
+x_train, y_train, x_val, y_val, x_test, y_test = load_dataset(level='level_1')
 
 # 2. Define and Build the model
 
@@ -43,7 +42,7 @@ model = Sequential([
 ])
 
 # build each layers within the 'model'
-model.build(input_shape=(512, 28, 28, 1), show_summary=True)  # Input shape must be specified
+model.build(input_shape=(x_train.shape[0], 28, 28, 1), show_summary=True)  # Input shape must be specified
 
 # 3. Initialize Optimizer
 print_step_head(head_name='Optimizer(SGD) Initializing', _index=3)
@@ -56,18 +55,17 @@ criterion = CrossEntropyLoss()
 # 5. Performing Training
 print_step_head(head_name='Perform Training', _index=5)
 
-train_pipeline = CNN_Training()
-history = train_pipeline.train(
+train_pipeline = CNN_Training(
     model=model,
     optimizer=optimizer,
     criterion=criterion,
     x_train=x_train, y_train=y_train,
     x_val=x_val, y_val=y_val,
-    x_test=x_test, y_test=y_test,
-    epochs=50,
-    batch_size=512,
+    epochs=10,
+    batch_size=100,
     patience=5  # early stop patience
 )
+history = train_pipeline.train()
 
 # 6. Performing Training
 print_step_head(head_name='Performing Training', _index=6)
