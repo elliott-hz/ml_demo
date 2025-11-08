@@ -14,13 +14,13 @@ from tensorflow.keras.utils import to_categorical
 # Define the 7 dataset size levels (training size, testing size)
 # Testing size is 15% of training size
 DATASET_LEVELS = {
-    'level_1': (1024, 154),
-    'level_2': (2048, 307),
-    'level_3': (4096, 614),
-    'level_4': (8192, 1229),
-    'level_5': (16384, 2458),
-    'level_6': (32768, 4915),
-    'level_7': (60000, 9000)  # Full MNIST training set
+    'level_1': (1024, 1000),
+    'level_2': (2048, 1000),
+    'level_3': (4096, 1000),
+    'level_4': (8192, 2000),
+    'level_5': (16384, 2000),
+    'level_6': (32768, 5000),
+    'level_7': (60000, 5000)  # Full MNIST training set
 }
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'results')

@@ -17,12 +17,12 @@ from cnn_root_impl.train.cnn_train_pipeline import CNN_Training
 
 # 1. Prepare dataset
 # Load dataset with level_1 (1024 training samples)
-x_train, y_train, x_test, y_test = load_dataset(level='level_3')
+x_train, y_train, x_test, y_test = load_dataset(level='level_2')
 
 # 2. Define and Build the model
 # stack the layers forming a 'model'
 model = Sequential([
-    Conv2D(out_channels=16, kernel_size=(3, 3), padding=0, in_channels=1, name='Conv-1', kernel_initializer='he'),
+    Conv2D(out_channels=32, kernel_size=(3, 3), padding=0, in_channels=1, name='Conv-1', kernel_initializer='he'),
     ReLU(),
     MaxPool2D(pool_size=2, stride=2, name='MaxPool2D-1'),
 
@@ -39,14 +39,14 @@ model = Sequential([
 ])
 
 # Set input shape for report generation
-input_shape = (x_train.shape[0], 28, 28, 1)
+input_shape = (256, 28, 28, 1)
 model.input_shape_for_report = input_shape
 
 # build each layers within the 'model'
 model.build(input_shape=input_shape, show_summary=True)  # Input shape must be specified
 
 # 3. Initialize Optimizer
-optimizer = SGD(lr=0.001)
+optimizer = SGD(lr=0.1)
 
 # 4. Initialize Loss function (criterion)
 criterion = CrossEntropyLoss()
@@ -59,8 +59,8 @@ train_pipeline = CNN_Training(
     x_train=x_train, y_train=y_train,
     x_test=x_test, y_test=y_test,
     val_rate=0.2,  # 20% of training data for validation
-    epochs=20,
-    batch_size=100,
+    epochs=50,
+    batch_size=256,
     patience=5,  # early stop patience
     report=True
 )
