@@ -1,28 +1,32 @@
 import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import models
+from sklearn.model_selection import train_test_split
 
 
-def train_and_save_model(model, train_data, test_data, model_path='mnist_cnn_model.h5'):
+def train_and_save_model(model, train_data, model_path='mnist_cnn_model.h5', validation_split=0.2):
     """
     Train model and save to local file
     
     Parameters:
         model: Keras model instance
         train_data: Training data
-        test_data: Test data
         model_path (str): Model save path
+        validation_split (float): Fraction of training data to use for validation
         
     Returns:
         model: Trained model
         history: Training history
     """
     train_images, train_labels = train_data
-    test_images, test_labels = test_data
+    
+    # Split training data to create validation set
+    train_images, val_images, train_labels, val_labels = train_test_split(
+        train_images, train_labels, test_size=validation_split, random_state=42)
     
     # Train the model
-    history = model.fit(train_images, train_labels, epochs=5, batch_size=64, 
-                        validation_data=(test_images, test_labels))
+    history = model.fit(train_images, train_labels, epochs=50, batch_size=512,
+                        validation_data=(val_images, val_labels))
     
     # Create directory if it doesn't exist
     model_dir = os.path.dirname(model_path)

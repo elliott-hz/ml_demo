@@ -34,7 +34,7 @@ if __name__ == "__main__":
     else:
         print("Training new model...")
         # Load and preprocess data
-        (train_images, train_labels), (test_images, test_labels) = load_and_preprocess_data()
+        (train_images, train_labels), (test_images, test_labels) = load_and_preprocess_data(num_train_samples=2000)
         
         # Build model
         model = build_cnn_model()
@@ -42,8 +42,7 @@ if __name__ == "__main__":
         # Train and save model
         trained_model, history = train_and_save_model(model, 
                                                      (train_images, train_labels), 
-                                                     (test_images, test_labels),
-                                                     model_path=model_path)
+                                                     model_path=model_path, validation_split=0.2)
     
     # Plot training history if available
     if history is not None:
