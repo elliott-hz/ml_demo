@@ -2,18 +2,29 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import models
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 
-def train_and_save_model(model, train_data, model_path='mnist_cnn_model.h5', validation_split=0.2):
+def train_and_save_model(model, train_data, model_path='mnist_cnn_model.h5', validation_split=0.2, 
+                         early_stopping=True, patience=5, min_delta=1e-4,
+                         reduce_lr=True, lr_factor=0.5, lr_patience=3, lr_min=1e-6, lr_monitor='val_loss'):
     """
     Train model and save to local file
     
     Parameters:
         model: Keras model instance
-        train_data: Training data
+        train_data: Training data (images, labels)
         model_path (str): Model save path
         validation_split (float): Fraction of training data to use for validation
-        
+        early_stopping (bool): Whether to use early stopping
+        patience (int): Number of epochs with no improvement after which training will be stopped
+        min_delta (float): Minimum change in the monitored quantity to qualify as an improvement
+        reduce_lr (bool): Whether to use ReduceLROnPlateau to reduce learning rate on plateau
+        lr_factor (float): Factor by which to reduce the learning rate. new_lr = lr * factor
+        lr_patience (int): Number of epochs with no improvement before reducing learning rate
+        lr_min (float): Lower bound on the learning rate
+        lr_monitor (str): Quantity to be monitored for ReduceLROnPlateau
+
     Returns:
         model: Trained model
         history: Training history
@@ -24,9 +35,22 @@ def train_and_save_model(model, train_data, model_path='mnist_cnn_model.h5', val
     train_images, val_images, train_labels, val_labels = train_test_split(
         train_images, train_labels, test_size=validation_split, random_state=42)
     
+    # Define callbacks
+    callbacks = []
+    if early_stopping:
+        early_stop = EarlyStopping(monitor='val_loss', patience=patience, 
+                                   min_delta=min_delta, restore_best_weights=True)
+        callbacks.append(early_stop)
+
+    # Add ReduceLROnPlateau if requested
+    if reduce_lr:
+        reduce_lr_cb = ReduceLROnPlateau(monitor=lr_monitor, factor=lr_factor, patience=lr_patience,
+                                         min_lr=lr_min, verbose=1)
+        callbacks.append(reduce_lr_cb)
+
     # Train the model
-    history = model.fit(train_images, train_labels, epochs=50, batch_size=512,
-                        validation_data=(val_images, val_labels))
+    history = model.fit(train_images, train_labels, epochs=50, batch_size=256,
+                        validation_data=(val_images, val_labels), callbacks=callbacks)
     
     # Create directory if it doesn't exist
     model_dir = os.path.dirname(model_path)

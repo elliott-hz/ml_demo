@@ -34,7 +34,8 @@ if __name__ == "__main__":
     else:
         print("Training new model...")
         # Load and preprocess data
-        (train_images, train_labels), (test_images, test_labels) = load_and_preprocess_data(num_train_samples=2000)
+        (train_images, train_labels), (test_images, test_labels) = load_and_preprocess_data(
+            num_train_samples=20000, num_test_samples=2000)
         
         # Build model
         model = build_cnn_model()
