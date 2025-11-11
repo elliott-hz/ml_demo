@@ -49,7 +49,7 @@ def train_and_save_model(model, train_data, model_path='mnist_cnn_model.h5', val
         callbacks.append(reduce_lr_cb)
 
     # Train the model
-    history = model.fit(train_images, train_labels, epochs=50, batch_size=256,
+    history = model.fit(train_images, train_labels, epochs=25, batch_size=256,
                         validation_data=(val_images, val_labels), callbacks=callbacks)
     
     # Create directory if it doesn't exist

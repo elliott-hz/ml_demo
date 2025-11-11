@@ -5,13 +5,13 @@ from tensorflow.keras import models
 
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# Add the parent directory to sys.path to enable importing from cnn_tf_mnist package
+# Add the parent directory to sys.path to enable importing from cnn_mnist_LeNet package
 sys.path.insert(0, os.path.dirname(current_dir))
 
-from cnn_tf_mnist.data_processing import load_and_preprocess_data
-from cnn_tf_mnist.model import build_cnn_model
-from cnn_tf_mnist.training import train_and_save_model, plot_training_history
-from cnn_tf_mnist.evaluation import print_classification_report_func, plot_roc_curves, plot_confusion_matrix
+from cnn_mnist_LeNet.data_processing import load_and_preprocess_data
+from cnn_mnist_LeNet.model import build_cnn_model
+from cnn_mnist_LeNet.training import train_and_save_model, plot_training_history
+from cnn_mnist_LeNet.evaluation import print_classification_report_func, plot_roc_curves, plot_confusion_matrix
 
 # Create results directory if it doesn't exist
 RESULTS_DIR = os.path.join(current_dir, 'results')
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         print("Training new model...")
         # Load and preprocess data
         (train_images, train_labels), (test_images, test_labels) = load_and_preprocess_data(
-            num_train_samples=20000, num_test_samples=2000)
+            num_train_samples=4000, num_test_samples=1000)
         
         # Build model
         model = build_cnn_model()
