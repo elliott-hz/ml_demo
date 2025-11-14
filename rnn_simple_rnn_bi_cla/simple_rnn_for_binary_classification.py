@@ -6,6 +6,7 @@ from keras import optimizers
 from keras.datasets import imdb
 from keras.preprocessing.sequence import pad_sequences
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.src.layers import SimpleRNN
 from sklearn.metrics import classification_report
 import os
 
@@ -33,11 +34,12 @@ print("Testing set shape:", x_test.shape, y_test.shape)
 # ----------------------------------------------------
 # 2. Build model
 # ----------------------------------------------------
-embedding_dim = 16
+embedding_dim = 32
+state_dim = 50
 
 model = Sequential([
     Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
-    Flatten(),
+    SimpleRNN(units=state_dim, return_sequences=False),
     Dense(1, activation='sigmoid')
 ])
 
@@ -118,4 +120,4 @@ print("\nClassification Report:")
 print(classification_report(y_test, y_pred, digits=4))
 
 # Save the model
-model.save('result/logistic_regression_model.h5')
+model.save('result/simple_rnn_model.h5')
