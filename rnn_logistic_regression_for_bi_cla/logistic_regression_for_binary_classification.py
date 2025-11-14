@@ -63,8 +63,8 @@ early_stop = EarlyStopping(
 
 lr_reducer = ReduceLROnPlateau(
     monitor='val_loss',
-    factor=0.5,      # 每次降低到原来的一半
-    patience=2,       # 2个 epoch 不提升就减少 LR
+    factor=0.5,      # reduce to 0.5 LR
+    patience=2,       # perform reducing LR if no improvement for at least patience epoches
     min_lr=1e-6
 )
 
