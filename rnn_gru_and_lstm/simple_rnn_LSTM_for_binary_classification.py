@@ -44,7 +44,7 @@ inputs = layers.Input(shape=(max_len,))
 
 x = layers.Embedding(vocab_size, embedding_dim)(inputs)
 
-x = layers.GRU(
+x = layers.LSTM(
         rnn_units,
         dropout=0.2,
         recurrent_dropout=0.2
@@ -83,7 +83,7 @@ callbacks = [
         min_lr=1e-6
     ),
     ModelCheckpoint(
-        filepath="result/best_gru_rnn_new.keras",
+        filepath="result/best_lstm_rnn.keras",
         monitor="val_loss",
         save_best_only=True
     )
@@ -111,7 +111,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.legend(["train", "val"])
 plt.grid()
-plt.savefig("result/loss.png")
+plt.savefig("result/loss_lstm.png")
 plt.close()
 
 plt.figure(figsize=(8, 5))
@@ -122,7 +122,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.legend(["train", "val"])
 plt.grid()
-plt.savefig("result/accuracy.png")
+plt.savefig("result/accuracy_lstm.png")
 plt.close()
 
 # ----------------------------------------------------
