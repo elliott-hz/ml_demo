@@ -8,6 +8,10 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # ------------------------------
+# Step 0: download data from https://www.manythings.org/anki/
+# ------------------------------
+
+# ------------------------------
 # 配置参数
 # ------------------------------
 # 数据路径：manythings.org提供的德语数据集 (格式为: 英文 \t 德文 \t ...)
