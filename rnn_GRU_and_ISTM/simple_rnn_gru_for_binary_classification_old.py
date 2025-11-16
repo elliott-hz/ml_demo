@@ -14,7 +14,7 @@ import os
 # 1. Load & preprocess data
 # ----------------------------------------------------
 vocabulary = 10000
-max_len = 32
+max_len = 50
 
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocabulary)
 
@@ -41,7 +41,6 @@ state_dim = 32
 model = Sequential([
     Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
     GRU(units=state_dim, return_sequences=False),
-    Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
 

@@ -18,7 +18,7 @@ np.random.seed(42)
 # 2. Load & preprocess data
 # ----------------------------------------------------
 vocab_size = 10000
-max_len = 100   # modern: 更长序列通常有更好的表达能力
+max_len = 50   # modern: 更长序列通常有更好的表达能力
 
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocab_size)
 
@@ -38,7 +38,7 @@ print("Test:", x_test.shape)
 # 3. Build modern SimpleRNN model (Functional API)
 # ----------------------------------------------------
 embedding_dim = 64
-rnn_units = 64
+rnn_units = 32
 
 inputs = layers.Input(shape=(max_len,))
 
