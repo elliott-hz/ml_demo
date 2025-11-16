@@ -34,23 +34,23 @@ print("Testing set shape:", x_test.shape, y_test.shape)
 # ----------------------------------------------------
 # 2. Build model
 # ----------------------------------------------------
-embedding_dim = 32
-state_dim = 50
+emb_dim = 32
+state_dim = 64
 
 # Case 1: SimpleRNN Layer: return_sequences=False
-# model = Sequential([
-#     Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
-#     SimpleRNN(units=state_dim, return_sequences=False),
-#     Dense(1, activation='sigmoid')
-# ])
-
-# Case 2: SimpleRNN Layer: return_sequences=True
 model = Sequential([
-    Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
-    SimpleRNN(units=state_dim, return_sequences=True),      # change SimpleRNN Layer: return_sequences from False to True
-    Flatten(),                                              # add new Layer
+    Embedding(input_dim=vocabulary, output_dim=emb_dim, input_shape=(max_len,)),
+    SimpleRNN(units=state_dim, return_sequences=False),
     Dense(1, activation='sigmoid')
 ])
+
+# Case 2: SimpleRNN Layer: return_sequences=True
+# model = Sequential([
+#     Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
+#     SimpleRNN(units=state_dim, return_sequences=True),      # change SimpleRNN Layer: return_sequences from False to True
+#     Flatten(),                                              # add new Layer
+#     Dense(1, activation='sigmoid')
+# ])
 
 model.summary()
 
