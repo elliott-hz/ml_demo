@@ -18,7 +18,7 @@ max_len = 50
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocabulary)
 
 x_train = pad_sequences(x_train, maxlen=max_len)
-x_test  = pad_sequences(x_test,  maxlen=max_len)
+x_test = pad_sequences(x_test,  maxlen=max_len)
 
 # Validation split
 x_valid = x_train[:5000]
@@ -33,10 +33,10 @@ print("Testing set shape:", x_test.shape, y_test.shape)
 # ----------------------------------------------------
 # 2. Build model
 # ----------------------------------------------------
-embedding_dim = 16
+emb_dim = 16
 
 model = Sequential([
-    Embedding(input_dim=vocabulary, output_dim=embedding_dim, input_shape=(max_len,)),
+    Embedding(input_dim=vocabulary, output_dim=emb_dim, input_shape=(max_len,)),
     Flatten(),
     Dense(1, activation='sigmoid')
 ])
