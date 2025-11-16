@@ -24,7 +24,7 @@ max_len = 50   # modern: 更长序列通常有更好的表达能力
 
 # pad to same length
 x_train = pad_sequences(x_train, maxlen=max_len)
-x_test  = pad_sequences(x_test,  maxlen=max_len)
+x_test = pad_sequences(x_test,  maxlen=max_len)
 
 # validation split
 x_train, x_valid = x_train[5000:], x_train[:5000]
@@ -37,8 +37,8 @@ print("Test:", x_test.shape)
 # ----------------------------------------------------
 # 3. Build modern SimpleRNN model (Functional API)
 # ----------------------------------------------------
-embedding_dim = 32
-rnn_units = 32
+embedding_dim = 64
+stat_dim = 32
 
 inputs = layers.Input(shape=(max_len,))
 
@@ -46,7 +46,7 @@ x = layers.Embedding(vocab_size, embedding_dim)(inputs)
 
 # 1st LSTM layer
 x = layers.LSTM(
-        rnn_units,
+        stat_dim,
         dropout=0.2,
         recurrent_dropout=0.2,
         return_sequences=True
@@ -54,7 +54,7 @@ x = layers.LSTM(
     
 # 2nd LSTM layer
 x = layers.LSTM(
-        rnn_units,
+        stat_dim,
         dropout=0.2,
         recurrent_dropout=0.2,
         return_sequences=True
@@ -62,7 +62,7 @@ x = layers.LSTM(
 
 # 3rd LSTM layer
 x = layers.LSTM(
-        rnn_units,
+        stat_dim,
         dropout=0.2,
         recurrent_dropout=0.2
     )(x)
@@ -111,7 +111,7 @@ callbacks = [
 # ----------------------------------------------------
 history = model.fit(
     x_train, y_train,
-    epochs=20,
+    epochs=15,
     batch_size=64,
     validation_data=(x_valid, y_valid),
     callbacks=callbacks
