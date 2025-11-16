@@ -17,15 +17,15 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 # 数据路径：manythings.org提供的德语数据集 (格式为: 英文 \t 德文 \t ...)
 data_path = "deu.txt"  
 # 使用的样本数量，用于演示的小子集
-num_samples = 5000    
+num_samples = 10000
 # LSTM隐藏层维度
-latent_dim = 256
+latent_dim = 128
 # 词嵌入维度
 embedding_dim = 128
 # 批次大小
 batch_size = 64
 # 训练轮数
-epochs = 5
+epochs = 8
 
 # ------------------------------
 # 1. 加载和预处理数据
@@ -268,7 +268,11 @@ examples = [
     "how are you?",
     "i love you",
     "what is your name?",
-    "where is the bank?"
+    "where is the bank?",
+    "this is a test sentence.",
+    "can you help me?",
+    "i would like to order a coffee.",
+    "the weather is nice today."
 ]
 
 # 对每个例子进行翻译并打印结果
