@@ -24,7 +24,7 @@ max_len = 50   # modern: 更长序列通常有更好的表达能力
 
 # pad to same length
 x_train = pad_sequences(x_train, maxlen=max_len)
-x_test  = pad_sequences(x_test,  maxlen=max_len)
+x_test = pad_sequences(x_test,  maxlen=max_len)
 
 # validation split
 x_train, x_valid = x_train[5000:], x_train[:5000]
@@ -37,7 +37,7 @@ print("Test:", x_test.shape)
 # ----------------------------------------------------
 # 3. Build Bidirectional LSTM model (Functional API)
 # ----------------------------------------------------
-embedding_dim = 32
+embedding_dim = 64
 rnn_units = 32
 
 inputs = layers.Input(shape=(max_len,))
@@ -96,7 +96,7 @@ callbacks = [
 # ----------------------------------------------------
 history = model.fit(
     x_train, y_train,
-    epochs=20,
+    epochs=5,
     batch_size=64,
     validation_data=(x_valid, y_valid),
     callbacks=callbacks
