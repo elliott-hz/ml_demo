@@ -15,11 +15,11 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 # 配置参数
 # ------------------------------
 # 数据路径：manythings.org提供的德语数据集 (格式为: 英文 \t 德文 \t ...)
-data_path = "deu.txt"  
+data_path = "deu.txt"
 # 使用的样本数量，用于演示的小子集
 num_samples = 10000
 # LSTM隐藏层维度
-latent_dim = 128
+latent_dim = 32
 # 词嵌入维度
 embedding_dim = 128
 # 批次大小
@@ -107,47 +107,72 @@ decoder_target_data[:, :-1] = decoder_input_data[:, 1:]
 # 3. 构建Seq2Seq模型（训练阶段）
 # ------------------------------
 # 编码器部分
-# 输入层：接收任意长度的整数序列
+# Encoder Layer 1 (Input)：接收任意长度的整数序列
 encoder_inputs = Input(shape=(None,), name="encoder_inputs")
-# 嵌入层：将整数序列转换为密集向量表示
-encoder_embedding = Embedding(input_dim=num_eng_tokens, output_dim=embedding_dim, name="encoder_embedding")
-# 应用嵌入层
-enc_emb = encoder_embedding(encoder_inputs)
-# LSTM层：返回状态（隐藏状态和单元状态）
-encoder_lstm = LSTM(latent_dim, return_state=True, name="encoder_lstm")
-# 获取LSTM输出和最终状态
-_, state_h, state_c = encoder_lstm(enc_emb)
+# Encoder Layer 2 (Embedding)：将整数序列转换为密集向量表示
+enc_emb = Embedding(input_dim=num_eng_tokens, output_dim=embedding_dim, name="encoder_embedding")(encoder_inputs)
+# Encoder Layer 3 (LSTM)：返回状态（隐藏状态和单元状态）
+_, state_h, state_c = LSTM(latent_dim, return_state=True, name="encoder_lstm")(enc_emb)
 # 编码器的最终状态将作为解码器的初始状态
 encoder_states = [state_h, state_c]
 
 # 解码器部分（训练阶段）
-# 解码器输入层
+# Decoder Layer 1 (Input): 解码器输入层
 decoder_inputs = Input(shape=(None,), name="decoder_inputs")
-# 解码器嵌入层
-decoder_embedding = Embedding(input_dim=num_ger_tokens, output_dim=embedding_dim, name="decoder_embedding")
-# 应用嵌入层
-dec_emb = decoder_embedding(decoder_inputs)
+# Decoder Layer 2 (Embedding): 解码器嵌入层
+dec_embedding_layer = Embedding(input_dim=num_ger_tokens, output_dim=embedding_dim, name="decoder_embedding")
+dec_emb = dec_embedding_layer(decoder_inputs)
 
-# 解码器LSTM层：返回序列和状态
-decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, name="decoder_lstm")
-# LSTM输出和状态，使用编码器的最终状态作为初始状态
-decoder_outputs, _, _ = decoder_lstm(dec_emb, initial_state=encoder_states)
-# 全连接层：将LSTM输出映射到德文字典大小，使用softmax激活函数输出概率分布
-decoder_dense = Dense(num_ger_tokens, activation="softmax", name="decoder_dense")
-decoder_outputs = decoder_dense(decoder_outputs)
+# Decoder Layer 3 (LSTM)：返回序列和状态
+dec_lstm_layer = LSTM(latent_dim, return_sequences=True, return_state=True, name="decoder_lstm")
+decoder_outputs, _, _ = dec_lstm_layer(dec_emb, initial_state=encoder_states)
+
+# Decoder Layer 4 (Dense)：将LSTM输出映射到德文字典大小，使用softmax激活函数输出概率分布
+dec_dense_layer = Dense(num_ger_tokens, activation="softmax", name="decoder_dense")
+decoder_outputs = dec_dense_layer(decoder_outputs)
 
 # 构建完整的训练模型
-model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+model = Model([encoder_inputs, decoder_inputs], decoder_outputs, name="seq2seq_model_train")
 # 编译模型：使用Adam优化器和稀疏分类交叉熵损失函数
 model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 # 显示模型结构摘要
 model.summary()
 
 # ------------------------------
+# 5. 构建推理模型
+# ------------------------------
+# 推理阶段的编码器模型：输入英文句子，输出编码后的状态
+encoder_model = Model(encoder_inputs, encoder_states, name="encoder_model_inference")
+encoder_model.summary()
+
+# 推理阶段的解码器模型
+# 解码器状态输入：前一个时间步的隐藏状态和单元状态
+decoder_states_inputs = [Input(shape=(latent_dim,), name="dec_state_input_h"),
+                         Input(shape=(latent_dim,), name="dec_state_input_c")]
+
+# 解码器单步输入：每次只处理一个时间步的token
+decoder_single_input = Input(shape=(1,), name="decoder_single_input")  # 单个时间步
+# 应用嵌入层（复用训练时的权重）
+dec_single_emb = dec_embedding_layer(decoder_single_input)
+# 解码器LSTM层（复用训练时的权重）
+dec_outputs_inf, state_h_inf, state_c_inf = dec_lstm_layer(dec_single_emb, initial_state=decoder_states_inputs)
+# 应用全连接层（复用训练时的权重）
+dec_outputs_inf = dec_dense_layer(dec_outputs_inf)  # 输出形状: (batch, 1, num_ger_tokens)
+
+# 构建推理阶段的解码器模型
+decoder_model = Model(
+    [decoder_single_input] + decoder_states_inputs,
+    [dec_outputs_inf, state_h_inf, state_c_inf],
+    name="decoder_model_inference"
+)
+decoder_model.summary()
+
+
+# ------------------------------
 # 4. 训练模型
 # ------------------------------
 # 解码器目标数据形状：(样本数, 时间步)
-# sparse_categorical_crossentropy期望整数标签，但Keras要求3D输入时形状为(samples, timesteps, 1)
+# sparse_categorical_cross_entropy期望整数标签，但Keras要求3D输入时形状为(samples, time_steps, 1)
 decoder_target_data_expanded = np.expand_dims(decoder_target_data, -1)
 
 # 开始训练模型
@@ -156,34 +181,7 @@ model.fit(
     decoder_target_data_expanded,
     batch_size=batch_size,
     epochs=epochs,
-    validation_split=0.1  # 使用10%的数据作为验证集
-)
-
-# ------------------------------
-# 5. 构建推理模型
-# ------------------------------
-# 推理阶段的编码器模型：输入英文句子，输出编码后的状态
-encoder_model = Model(encoder_inputs, encoder_states)
-
-# 推理阶段的解码器模型
-# 解码器状态输入：前一个时间步的隐藏状态和单元状态
-dec_state_input_h = Input(shape=(latent_dim,), name="dec_state_input_h")
-dec_state_input_c = Input(shape=(latent_dim,), name="dec_state_input_c")
-decoder_states_inputs = [dec_state_input_h, dec_state_input_c]
-
-# 解码器单步输入：每次只处理一个时间步的token
-decoder_single_input = Input(shape=(1,), name="decoder_single_input")  # 单个时间步
-# 应用嵌入层（复用训练时的权重）
-dec_single_emb = decoder_embedding(decoder_single_input)
-# 解码器LSTM层（复用训练时的权重）
-dec_outputs_inf, state_h_inf, state_c_inf = decoder_lstm(dec_single_emb, initial_state=decoder_states_inputs)
-# 应用全连接层（复用训练时的权重）
-dec_outputs_inf = decoder_dense(dec_outputs_inf)  # 输出形状: (batch, 1, num_ger_tokens)
-
-# 构建推理阶段的解码器模型
-decoder_model = Model(
-    [decoder_single_input] + decoder_states_inputs,
-    [dec_outputs_inf, state_h_inf, state_c_inf]
+    validation_split=0.15  # 使用15%的数据作为验证集
 )
 
 # ------------------------------
@@ -194,9 +192,11 @@ reverse_ger_index = {idx: word for word, idx in ger_tokenizer.word_index.items()
 # 注意：填充符0映射为空字符串
 reverse_ger_index[0] = ''
 
+
 # 安全获取token id的辅助函数
 def get_token_id(token):
     return ger_tokenizer.word_index.get(token, None)
+
 
 # 获取开始和结束标记的id
 sos_id = get_token_id(sos_token)
@@ -204,6 +204,7 @@ eos_id = get_token_id(eos_token)
 # 检查标记是否正确插入
 if sos_id is None or eos_id is None:
     raise ValueError("Start or end token not found in German tokenizer. Check token insertion.")
+
 
 # ------------------------------
 # 7. 翻译函数（推理过程）
@@ -259,6 +260,7 @@ def translate_sentence(input_text, max_len=max_ger_len):
     decoded_sentence = " ".join(decoded_tokens)
     return decoded_sentence.strip()
 
+
 # ------------------------------
 # 8. 测试翻译功能
 # ------------------------------
@@ -268,11 +270,7 @@ examples = [
     "how are you?",
     "i love you",
     "what is your name?",
-    "where is the bank?",
-    "this is a test sentence.",
-    "can you help me?",
-    "i would like to order a coffee.",
-    "the weather is nice today."
+    "where is the bank?"
 ]
 
 # 对每个例子进行翻译并打印结果
