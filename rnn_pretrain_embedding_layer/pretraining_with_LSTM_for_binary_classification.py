@@ -1,12 +1,13 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.datasets import imdb
-from sklearn.metrics import classification_report
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+import tensorflow as tf
+from sklearn.metrics import classification_report
+from tensorflow.keras import layers, models
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.keras.datasets import imdb
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # ----------------------------------------------------
 # 1. Reproducibility（随机数固定）
@@ -18,13 +19,13 @@ np.random.seed(42)
 # 2. Load & preprocess data
 # ----------------------------------------------------
 vocab_size = 10000
-max_len = 50   # modern: 更长序列通常有更好的表达能力
+max_len = 50  # modern: 更长序列通常有更好的表达能力
 
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocab_size)
 
 # pad to same length
 x_train = pad_sequences(x_train, maxlen=max_len)
-x_test  = pad_sequences(x_test,  maxlen=max_len)
+x_test = pad_sequences(x_test, maxlen=max_len)
 
 # validation split
 x_train, x_valid = x_train[5000:], x_train[:5000]
@@ -37,9 +38,9 @@ print("Test:", x_test.shape)
 # ====================================================
 # STAGE 1: PRE-TRAIN EMBEDDING LAYER SEPARATELY
 # ====================================================
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("STAGE 1: PRE-TRAINING EMBEDDING LAYER")
-print("="*60)
+print("=" * 60)
 
 embedding_dim = 64
 rnn_units = 32
@@ -102,16 +103,16 @@ print("\n✓ Embedding layer pre-trained successfully!")
 # ====================================================
 # STAGE 2: BUILD FINAL MODEL WITH FROZEN EMBEDDING
 # ====================================================
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("STAGE 2: BUILDING FINAL MODEL WITH FROZEN EMBEDDING")
-print("="*60)
+print("=" * 60)
 
 # Build final model
 inputs = layers.Input(shape=(max_len,))
 
 # Use the pre-trained embedding layer and freeze it
+trained_embedding_layer.trainable = False # Freeze embedding layer
 x = trained_embedding_layer(inputs)
-x.trainable = False  # Freeze embedding layer
 
 x = layers.LSTM(
     rnn_units,
@@ -134,9 +135,9 @@ model.compile(
 # ====================================================
 # STAGE 3: TRAIN FINAL MODEL (LSTM + DENSE)
 # ====================================================
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("STAGE 3: TRAINING LSTM + DENSE (EMBEDDING FROZEN)")
-print("="*60)
+print("=" * 60)
 
 # Callbacks for final training
 if not os.path.exists("result"):
@@ -175,9 +176,9 @@ history = model.fit(
 # ====================================================
 # PLOT PRE-TRAINING RESULTS
 # ====================================================
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("PLOTTING PRE-TRAINING RESULTS")
-print("="*60)
+print("=" * 60)
 
 plt.figure(figsize=(12, 5))
 
@@ -235,9 +236,9 @@ plt.close()
 # ====================================================
 # STAGE 4: EVALUATION AND PREDICTION
 # ====================================================
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("STAGE 4: EVALUATION AND PREDICTION")
-print("="*60)
+print("=" * 60)
 
 # Evaluate on test set
 print("\nEvaluating on test set...")
@@ -264,7 +265,6 @@ for i in range(min(20, len(y_test))):
     status = "✓" if y_test[i] == y_pred[i] else "✗"
     print(f"{status} Sample {i:2d}: True={true_label:8s}, Pred={pred_label:8s}, Confidence={confidence:.4f}")
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("Training completed successfully!")
-print("="*60)
-
+print("=" * 60)
