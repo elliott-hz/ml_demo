@@ -88,7 +88,7 @@ callbacks = [
         min_lr=1e-6
     ),
     ModelCheckpoint(
-        filepath="result/best_lstm_rnn.keras",
+        filepath="result/best_lstm_rnn_with_attention.keras",
         monitor="val_loss",
         save_best_only=True
     )
@@ -116,7 +116,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.legend(["train", "val"])
 plt.grid()
-plt.savefig("result/loss_lstm.png")
+plt.savefig("result/loss_lstm_with_attention.png")
 plt.close()
 
 plt.figure(figsize=(8, 5))
@@ -127,7 +127,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.legend(["train", "val"])
 plt.grid()
-plt.savefig("result/accuracy_lstm.png")
+plt.savefig("result/accuracy_lstm_with_attention.png")
 plt.close()
 
 # ----------------------------------------------------
