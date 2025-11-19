@@ -79,9 +79,13 @@ print("German tokens:", num_ger_tokens, "Max length:", max_ger_len)
 encoder_input_data = pad_sequences(eng_sequences, maxlen=max_eng_len, padding="post")
 decoder_input_data = pad_sequences(ger_sequences, maxlen=max_ger_len, padding="post")
 
+print("Encoder input shape:", encoder_input_data.shape)
+print("Decoder input shape:", decoder_input_data.shape)
+
 # Decoder target data (shifted left)
 decoder_target_data = np.zeros_like(decoder_input_data)
 decoder_target_data[:, :-1] = decoder_input_data[:, 1:]
+print("Decoder target shape:", decoder_target_data.shape)
 
 
 # ------------------------------
@@ -91,7 +95,7 @@ decoder_target_data[:, :-1] = decoder_input_data[:, 1:]
 def positional_encoding(position, d_model):
     """Simple positional encoding using sine and cosine functions"""
     angle_rads = np.arange(position)[:, np.newaxis] / np.power(10000, (
-                2 * (np.arange(d_model)[np.newaxis, :]) // 2) / np.float32(d_model))
+            2 * (np.arange(d_model)[np.newaxis, :]) // 2) / np.float32(d_model))
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
     angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
     pos_encoding = angle_rads[np.newaxis, ...]
@@ -224,13 +228,16 @@ model.fit(
 reverse_ger_index = {idx: word for word, idx in ger_tokenizer.word_index.items()}
 reverse_ger_index[0] = ''  # Padding symbol maps to empty string
 
+
 def get_token_id(token, tokenizer):
     """Helper function to safely get token id"""
     return tokenizer.word_index.get(token, None)
 
+
 # Get the ids of start and end tokens
 sos_id = get_token_id(sos_token, ger_tokenizer)
 eos_id = get_token_id(eos_token, ger_tokenizer)
+
 
 def translate_sentence(input_text, max_len=max_ger_len):
     """
@@ -246,7 +253,7 @@ def translate_sentence(input_text, max_len=max_ger_len):
     # Preprocess input text
     seq = eng_tokenizer.texts_to_sequences([input_text.lower()])
     seq = pad_sequences(seq, maxlen=max_eng_len, padding="post")
-    
+
     # Encoder processing (same as during training)
     enc_padding_mask = create_padding_mask(seq)
     enc_embedding_layer = model.get_layer("embedding")
@@ -254,51 +261,51 @@ def translate_sentence(input_text, max_len=max_ger_len):
     enc_embedding *= tf.math.sqrt(tf.cast(d_model, tf.float32))
     encoder_x = enc_embedding + pos_encoding[:, :max_eng_len, :]
     encoder_x = Dropout(dropout_rate)(encoder_x, training=False)
-    
+
     # Apply encoder layers
     for encoder_layer in encoder_layers:
         encoder_x = encoder_layer(encoder_x, training=False, mask=enc_padding_mask)
-    
+
     encoder_output = encoder_x
-    
+
     # Start with SOS token
     target_seq = np.array([[sos_id]])
-    
+
     # Generate translation token by token
     for _ in range(max_len):
         # Create masks for decoder
         dec_padding_mask = create_padding_mask(target_seq)
         look_ahead_mask = create_look_ahead_mask(tf.shape(target_seq)[1])
         combined_mask = tf.maximum(dec_padding_mask, look_ahead_mask)
-        
+
         # Decoder processing
         dec_embedding_layer = model.get_layer("embedding_1")
         dec_embedding = dec_embedding_layer(target_seq)
         dec_embedding *= tf.math.sqrt(tf.cast(d_model, tf.float32))
         decoder_x = dec_embedding + pos_encoding[:, :tf.shape(target_seq)[1], :]
         decoder_x = Dropout(dropout_rate)(decoder_x, training=False)
-        
+
         # Apply decoder layers
         decoder_output_temp = decoder_x
         for decoder_layer in decoder_layers:
             decoder_output_temp = decoder_layer(
                 decoder_output_temp, encoder_output, training=False,
                 look_ahead_mask=combined_mask, padding_mask=enc_padding_mask)
-        
+
         # Final output layer
         final_output_layer = model.get_layer("dense")
         decoder_output_result = final_output_layer(decoder_output_temp)
-        
+
         # Get the most likely next token
         predicted_id = np.argmax(decoder_output_result[0, -1, :])
-        
+
         # Stop if we've reached the end token or padding
         if predicted_id == eos_id or predicted_id == 0:
             break
-            
+
         # Add predicted token to sequence
         target_seq = np.concatenate([target_seq, [[predicted_id]]], axis=1)
-    
+
     # Convert token IDs back to words
     translated_words = []
     for token_id in target_seq[0]:
@@ -306,8 +313,9 @@ def translate_sentence(input_text, max_len=max_ger_len):
             word = reverse_ger_index.get(token_id, '')
             if word:
                 translated_words.append(word)
-    
+
     return ' '.join(translated_words)
+
 
 # ------------------------------
 # 7. Test translation functionality
