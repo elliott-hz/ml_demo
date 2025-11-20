@@ -14,10 +14,10 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 # ------------------------------
 data_path = "deu.txt"  # manythings.org english\tgerman (lowercase expected)
 num_samples = 5000
-d_model = 64
-num_heads = 4
-num_layers = 2
-intermediate_dim = 128
+d_model = 64    # model dim or hidden dim or hidden size or embedding dim
+num_heads = 4   # number of attention heads of each multi-head attention layer of encoder/decoder
+num_layers = 2  # number of encoder/decoder layers
+intermediate_dim = 128 #
 dropout = 0.1
 batch_size = 32
 epochs = 3  # for demo; increase for real training
