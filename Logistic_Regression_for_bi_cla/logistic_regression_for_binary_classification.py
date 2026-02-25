@@ -17,6 +17,11 @@ max_len = 50
 
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocabulary)
 
+print(x_train[0])
+print(y_train[0])
+print(x_test[0])
+print(y_test[0])
+
 x_train = pad_sequences(x_train, maxlen=max_len)
 x_test = pad_sequences(x_test,  maxlen=max_len)
 
